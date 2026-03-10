@@ -17,16 +17,16 @@ on:
   repository_dispatch:
     types: [conformance-test]
   workflow_dispatch:
-  schedule:
-    - cron: '0 */8 * * *'
+  # schedule:
+  #   - cron: '0 */8 * * *'
   push:
     branches:
-      - 'release-*'
+      - "release-*"
   pull_request:
     branches:
-      - 'main'
-      - 'release-*'
-      - 'gh-readonly-queue/main/*'
+      - "main"
+      - "release-*"
+      - "gh-readonly-queue/main/*"
   merge_group:
 
 jobs:
@@ -36,47 +36,47 @@ jobs:
   generate-matrix:
     runs-on: ubuntu-22.04
     steps:
-    - name: Parse repository_dispatch payload
-      if: github.event_name == 'repository_dispatch'
-      working-directory: ${{ github.workspace }}
-      run: |
-        if [ ${{ github.event.client_payload.command }} = "ok-to-test" ]; then
-          echo "CHECKOUT_REF=${{ github.event.client_payload.pull_head_ref }}" >> $GITHUB_ENV
-          echo "PR_NUMBER=${{ github.event.client_payload.issue.number }}" >> $GITHUB_ENV
-        fi
+      - name: Parse repository_dispatch payload
+        if: github.event_name == 'repository_dispatch'
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ ${{ github.event.client_payload.command }} = "ok-to-test" ]; then
+            echo "CHECKOUT_REF=${{ github.event.client_payload.pull_head_ref }}" >> $GITHUB_ENV
+            echo "PR_NUMBER=${{ github.event.client_payload.issue.number }}" >> $GITHUB_ENV
+          fi
 
-    - name: Check out code
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ env.CHECKOUT_REPO }}
-        ref: ${{ env.CHECKOUT_REF }}
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ env.CHECKOUT_REPO }}
+          ref: ${{ env.CHECKOUT_REF }}
 
-    - name: Generate test matrix
-      id: generate-matrix
-      env:
-        VAULT_NAME: ${{ secrets.AZURE_KEYVAULT }}
-      run: |
-        if [ -z "$VAULT_NAME" ]; then
-          # Do not include cloud tests when credentials are not available
-          node .github/scripts/test-info.mjs conformance false
-        else
-          # Include cloud tests
-          node .github/scripts/test-info.mjs conformance true
-        fi
+      - name: Generate test matrix
+        id: generate-matrix
+        env:
+          VAULT_NAME: ${{ secrets.AZURE_KEYVAULT }}
+        run: |
+          if [ -z "$VAULT_NAME" ]; then
+            # Do not include cloud tests when credentials are not available
+            node .github/scripts/test-info.mjs conformance false
+          else
+            # Include cloud tests
+            node .github/scripts/test-info.mjs conformance true
+          fi
 
-    - name: Create PR comment
-      if: env.PR_NUMBER != ''
-      uses: artursouza/sticky-pull-request-comment@da9e86aa2a80e4ae3b854d251add33bd6baabcba
-      with:
-        header: ${{ github.run_id }}
-        number: ${{ env.PR_NUMBER }}
-        GITHUB_TOKEN: ${{ secrets.DAPR_BOT_TOKEN }}
-        message: |
-          # Components conformance test
+      - name: Create PR comment
+        if: env.PR_NUMBER != ''
+        uses: artursouza/sticky-pull-request-comment@da9e86aa2a80e4ae3b854d251add33bd6baabcba
+        with:
+          header: ${{ github.run_id }}
+          number: ${{ env.PR_NUMBER }}
+          GITHUB_TOKEN: ${{ secrets.DAPR_BOT_TOKEN }}
+          message: |
+            # Components conformance test
 
-          🔗 **[Link to Action run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+            🔗 **[Link to Action run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
 
-          Commit ref: ${{ env.CHECKOUT_REF }}
+            Commit ref: ${{ env.CHECKOUT_REF }}
 
     outputs:
       test-matrix: ${{ steps.generate-matrix.outputs.test-matrix }}
@@ -87,8 +87,8 @@ jobs:
     # Add "id-token" with the intended permissions.
     # Needed by the 'Authenticate to Google Cloud' step.
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
 
     runs-on: ubuntu-22.04
     env:
@@ -108,262 +108,262 @@ jobs:
         include: ${{ fromJson(needs.generate-matrix.outputs.test-matrix) }}
 
     steps:
-    - name: Set default payload repo and ref
-      working-directory: ${{ github.workspace }}
-      run: |
-        echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
-        echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_ENV
+      - name: Set default payload repo and ref
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "CHECKOUT_REPO=${{ github.repository }}" >> $GITHUB_ENV
+          echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_ENV
 
-    - name: Parse repository_dispatch payload
-      if: github.event_name == 'repository_dispatch'
-      working-directory: ${{ github.workspace }}
-      run: |
-        if [ ${{ github.event.client_payload.command }} = "ok-to-test" ]; then
-          echo "CHECKOUT_REPO=${{ github.event.client_payload.pull_head_repo }}" >> $GITHUB_ENV
-          echo "CHECKOUT_REF=${{ github.event.client_payload.pull_head_ref }}" >> $GITHUB_ENV
-          echo "PR_NUMBER=${{ github.event.client_payload.issue.number }}" >> $GITHUB_ENV
-        fi
+      - name: Parse repository_dispatch payload
+        if: github.event_name == 'repository_dispatch'
+        working-directory: ${{ github.workspace }}
+        run: |
+          if [ ${{ github.event.client_payload.command }} = "ok-to-test" ]; then
+            echo "CHECKOUT_REPO=${{ github.event.client_payload.pull_head_repo }}" >> $GITHUB_ENV
+            echo "CHECKOUT_REF=${{ github.event.client_payload.pull_head_ref }}" >> $GITHUB_ENV
+            echo "PR_NUMBER=${{ github.event.client_payload.issue.number }}" >> $GITHUB_ENV
+          fi
 
-    - name: Check out code
-      uses: actions/checkout@v6
-      with:
-        repository: ${{ env.CHECKOUT_REPO }}
-        ref: ${{ env.CHECKOUT_REF }}
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ env.CHECKOUT_REPO }}
+          ref: ${{ env.CHECKOUT_REF }}
 
-    - name: Setup test environment
-      run: |
-        # Output file
-        echo "TEST_OUTPUT_FILE_PREFIX=$GITHUB_WORKSPACE/test_report" >> $GITHUB_ENV
+      - name: Setup test environment
+        run: |
+          # Output file
+          echo "TEST_OUTPUT_FILE_PREFIX=$GITHUB_WORKSPACE/test_report" >> $GITHUB_ENV
 
-        # Current time (used by Terraform)
-        echo "CURRENT_TIME=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
+          # Current time (used by Terraform)
+          echo "CURRENT_TIME=$(date --rfc-3339=date)" >> ${GITHUB_ENV}
 
-    - name: Configure conformance test and source path
-      run: |
-        TEST_COMPONENT=$(echo ${{ matrix.component }} | sed -E 's/\./\//g')
-        export SOURCE_PATH="github.com/dapr/components-contrib/${TEST_COMPONENT}"
-        echo "SOURCE_PATH=$SOURCE_PATH" >> $GITHUB_ENV
-        # converts slashes to dots in this string, so that it doesn't consider them sub-folders
-        export SOURCE_PATH_LINEAR=$(echo "$SOURCE_PATH" |sed 's#/#\.#g')
-        echo "SOURCE_PATH_LINEAR=$SOURCE_PATH_LINEAR" >> $GITHUB_ENV
+      - name: Configure conformance test and source path
+        run: |
+          TEST_COMPONENT=$(echo ${{ matrix.component }} | sed -E 's/\./\//g')
+          export SOURCE_PATH="github.com/dapr/components-contrib/${TEST_COMPONENT}"
+          echo "SOURCE_PATH=$SOURCE_PATH" >> $GITHUB_ENV
+          # converts slashes to dots in this string, so that it doesn't consider them sub-folders
+          export SOURCE_PATH_LINEAR=$(echo "$SOURCE_PATH" |sed 's#/#\.#g')
+          echo "SOURCE_PATH_LINEAR=$SOURCE_PATH_LINEAR" >> $GITHUB_ENV
 
-    - uses: Azure/login@v1
-      if: matrix.required-secrets != ''
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: Azure/login@v1
+        if: matrix.required-secrets != ''
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # Set this GitHub secret to your KeyVault, and grant the KeyVault policy to your Service Principal:
-    #    az keyvault set-policy -n $AZURE_KEYVAULT --secret-permissions get list --spn $SPN_CLIENT_ID
-    # Using az cli to query keyvault as Azure/get-keyvault-secrets@v1 is deprecated
-    - name: Setup secrets
-      if: matrix.required-secrets != ''
-      env:
-        VAULT_NAME: ${{ secrets.AZURE_KEYVAULT }}
-      run: |
-        secrets="${{ matrix.required-secrets }}"
-        for secretName in $(echo -n $secrets | tr ',' ' '); do
-          value=$(az keyvault secret show \
-            --name $secretName \
-            --vault-name $VAULT_NAME \
-            --query value \
-            --output tsv)
-          echo "::add-mask::$value"
-          echo "$secretName=$value" >> $GITHUB_OUTPUT
-          echo "$secretName=$value" >> $GITHUB_ENV
-        done
+      # Set this GitHub secret to your KeyVault, and grant the KeyVault policy to your Service Principal:
+      #    az keyvault set-policy -n $AZURE_KEYVAULT --secret-permissions get list --spn $SPN_CLIENT_ID
+      # Using az cli to query keyvault as Azure/get-keyvault-secrets@v1 is deprecated
+      - name: Setup secrets
+        if: matrix.required-secrets != ''
+        env:
+          VAULT_NAME: ${{ secrets.AZURE_KEYVAULT }}
+        run: |
+          secrets="${{ matrix.required-secrets }}"
+          for secretName in $(echo -n $secrets | tr ',' ' '); do
+            value=$(az keyvault secret show \
+              --name $secretName \
+              --vault-name $VAULT_NAME \
+              --query value \
+              --output tsv)
+            echo "::add-mask::$value"
+            echo "$secretName=$value" >> $GITHUB_OUTPUT
+            echo "$secretName=$value" >> $GITHUB_ENV
+          done
 
-    # Authenticate with GCP Workload Identity Pool
-    # Exports GCP ENV Vars:
-    #    - GCP_PROJECT
-    #    - GOOGLE_APPLICATION_CREDENTIALS
-    - id: 'auth'
-      if: matrix.require-gcp-credentials == 'true'
-      name: 'Authenticate to Google Cloud'
-      uses: 'google-github-actions/auth@v3'
-      with:
-        token_format: 'access_token'
-        workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER_NAME }}
-        service_account: ${{ secrets.GCP_WIF_SA_EMAIL }}
-        create_credentials_file: true
-        export_environment_variables: true
-        cleanup_credentials: true
+      # Authenticate with GCP Workload Identity Pool
+      # Exports GCP ENV Vars:
+      #    - GCP_PROJECT
+      #    - GOOGLE_APPLICATION_CREDENTIALS
+      - id: "auth"
+        if: matrix.require-gcp-credentials == 'true'
+        name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v3"
+        with:
+          token_format: "access_token"
+          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER_NAME }}
+          service_account: ${{ secrets.GCP_WIF_SA_EMAIL }}
+          create_credentials_file: true
+          export_environment_variables: true
+          cleanup_credentials: true
 
-    # Download the required certificates into files, and set env var pointing to their names
-    - name: Setup certs
-      if: matrix.required-certs != ''
-      run: |
-        for CERT_NAME in $(echo "${{ matrix.required-certs }}" | sed 's/,/ /g'); do
-          CERT_FILE=$(mktemp --suffix .pfx)
-          echo "Downloading cert $CERT_NAME into file $CERT_FILE"
-          rm $CERT_FILE && \
-            az keyvault secret download --vault-name ${{ secrets.AZURE_KEYVAULT }} --name $CERT_NAME --encoding base64 --file $CERT_FILE
-          echo 'Setting $CERT_NAME to' "$CERT_FILE"
-          echo "$CERT_NAME=$CERT_FILE" >> $GITHUB_ENV
-        done
+      # Download the required certificates into files, and set env var pointing to their names
+      - name: Setup certs
+        if: matrix.required-certs != ''
+        run: |
+          for CERT_NAME in $(echo "${{ matrix.required-certs }}" | sed 's/,/ /g'); do
+            CERT_FILE=$(mktemp --suffix .pfx)
+            echo "Downloading cert $CERT_NAME into file $CERT_FILE"
+            rm $CERT_FILE && \
+              az keyvault secret download --vault-name ${{ secrets.AZURE_KEYVAULT }} --name $CERT_NAME --encoding base64 --file $CERT_FILE
+            echo 'Setting $CERT_NAME to' "$CERT_FILE"
+            echo "$CERT_NAME=$CERT_FILE" >> $GITHUB_ENV
+          done
 
-    - name: Setup Terraform
-      if: matrix.require-terraform == 'true'
-      uses: hashicorp/setup-terraform@v2.0.3
+      - name: Setup Terraform
+        if: matrix.require-terraform == 'true'
+        uses: hashicorp/setup-terraform@v2.0.3
 
-    - name: Set Cloudflare env vars
-      if: matrix.require-cloudflare-credentials == 'true'
-      run: |
-        echo "CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" >> $GITHUB_ENV
-        echo "CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" >> $GITHUB_ENV
+      - name: Set Cloudflare env vars
+        if: matrix.require-cloudflare-credentials == 'true'
+        run: |
+          echo "CLOUDFLARE_ACCOUNT_ID=${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" >> $GITHUB_ENV
+          echo "CLOUDFLARE_API_TOKEN=${{ secrets.CLOUDFLARE_API_TOKEN }}" >> $GITHUB_ENV
 
-    - name: Set AWS env vars
-      if: matrix.require-aws-credentials == 'true'
-      run: |
-        echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> $GITHUB_ENV
-        echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> $GITHUB_ENV
+      - name: Set AWS env vars
+        if: matrix.require-aws-credentials == 'true'
+        run: |
+          echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> $GITHUB_ENV
 
-    - name: Configure AWS Credentials
-      if: matrix.require-aws-credentials == 'true'
-      uses: aws-actions/configure-aws-credentials@v5
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: us-west-1
+      - name: Configure AWS Credentials
+        if: matrix.require-aws-credentials == 'true'
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: us-west-1
 
-    - name: Start MongoDB
-      if: matrix.mongodb-version != ''
-      uses: supercharge/mongodb-github-action@1.12.1
-      with:
-        mongodb-version: ${{ matrix.mongodb-version }}
-        mongodb-replica-set: test-rs
+      - name: Start MongoDB
+        if: matrix.mongodb-version != ''
+        uses: supercharge/mongodb-github-action@1.12.1
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+          mongodb-replica-set: test-rs
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version-file: 'go.mod'
-        cache: 'false'
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: "go.mod"
+          cache: "false"
 
-    - name: Install Node.js ${{ matrix.nodejs-version }}
-      if: matrix.nodejs-version != ''
-      uses: actions/setup-node@v6
-      with:
-        node-version: ${{ matrix.nodejs-version }}
+      - name: Install Node.js ${{ matrix.nodejs-version }}
+        if: matrix.nodejs-version != ''
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.nodejs-version }}
 
-    - name: Start KinD
-      uses: helm/kind-action@v1.13.0
-      if: matrix.require-kind == 'true'
+      - name: Start KinD
+        uses: helm/kind-action@v1.13.0
+        if: matrix.require-kind == 'true'
 
-    - name: Download Go dependencies
-      run: |
-        go mod download
-        go install github.com/axw/gocov/gocov@${{ env.GOCOV_VER }}
-        go install gotest.tools/gotestsum@${{ env.GOTESTSUM_VER }}
+      - name: Download Go dependencies
+        run: |
+          go mod download
+          go install github.com/axw/gocov/gocov@${{ env.GOCOV_VER }}
+          go install gotest.tools/gotestsum@${{ env.GOTESTSUM_VER }}
 
-    - name: Run setup script
-      if: matrix.setup-script != ''
-      run: .github/scripts/components-scripts/${{ matrix.setup-script }}
+      - name: Run setup script
+        if: matrix.setup-script != ''
+        run: .github/scripts/components-scripts/${{ matrix.setup-script }}
 
-    - name: Catch setup failures
-      if: failure()
-      run: |
-        echo "CONFORMANCE_FAILURE=true" >> $GITHUB_ENV
-
-    - name: Run tests
-      continue-on-error: true
-      run: |
-        set -e
-        KIND=$(echo ${{ matrix.component }} | cut -d. -f1)
-        NAME=$(echo ${{ matrix.component }} | cut -d. -f2-)
-        KIND_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${KIND:0:1})${KIND:1}"
-
-        if [ "${KIND}" = "secretstores" ]; then
-          KIND_UPPER=SecretStore
-        fi
-
-        echo "Running tests for Test${KIND_UPPER}Conformance/${KIND}/${NAME} ... "
-        echo "Source Package: " ${{ matrix.source-pkg }}
-
-        set +e
-        gotestsum --jsonfile ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.json \
-          --junitfile ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.xml --format standard-verbose -- \
-          -p 2 -count=1 -timeout=15m -tags=conftests ./tests/conformance --run="Test${KIND_UPPER}Conformance/${NAME}" -coverprofile=cover.out \
-          -covermode=set -coverpkg=${{ matrix.source-pkg }}
-
-        status=$?
-        echo "Completed tests for Test${KIND_UPPER}Conformance/${KIND}/${NAME} ... "
-        if test $status -ne 0; then
-          echo "Setting CONFORMANCE_FAILURE"
+      - name: Catch setup failures
+        if: failure()
+        run: |
           echo "CONFORMANCE_FAILURE=true" >> $GITHUB_ENV
-        fi
-        set -e
 
-        # Fail the step if we found no test to run
-        if grep -q "warning: no tests to run" ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.json ; then
-          echo "::error:: No test was found for component ${{ matrix.component }}"
-          exit -1
-        fi
+      - name: Run tests
+        continue-on-error: true
+        run: |
+          set -e
+          KIND=$(echo ${{ matrix.component }} | cut -d. -f1)
+          NAME=$(echo ${{ matrix.component }} | cut -d. -f2-)
+          KIND_UPPER="$(tr '[:lower:]' '[:upper:]' <<< ${KIND:0:1})${KIND:1}"
 
-    - name: Delete downloaded up certs
-      if: always() && matrix.required-certs != ''
-      run: |
-        for CERT_NAME in $(echo "${{ matrix.required-certs }}" | sed 's/,/ /g'); do
-          CERT_FILE=$(printenv $CERT_NAME)
+          if [ "${KIND}" = "secretstores" ]; then
+            KIND_UPPER=SecretStore
+          fi
 
-          echo "Cleaning up the certificate file $CERT_FILE..."
-          rm $CERT_FILE || true
-        done
+          echo "Running tests for Test${KIND_UPPER}Conformance/${KIND}/${NAME} ... "
+          echo "Source Package: " ${{ matrix.source-pkg }}
 
-    - name: Check conformance test passed
-      continue-on-error: false
-      run: |
-        echo "CONFORMANCE_FAILURE=$CONFORMANCE_FAILURE"
-        if [[ -v CONFORMANCE_FAILURE ]]; then
-          exit 1
-        fi
+          set +e
+          gotestsum --jsonfile ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.json \
+            --junitfile ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.xml --format standard-verbose -- \
+            -p 2 -count=1 -timeout=15m -tags=conftests ./tests/conformance --run="Test${KIND_UPPER}Conformance/${NAME}" -coverprofile=cover.out \
+            -covermode=set -coverpkg=${{ matrix.source-pkg }}
 
-    - name: Retrieve infrastructure failure logs
-      if: failure() && matrix.logs-script != ''
-      run: .github/scripts/components-scripts/${{ matrix.logs-script }}
+          status=$?
+          echo "Completed tests for Test${KIND_UPPER}Conformance/${KIND}/${NAME} ... "
+          if test $status -ne 0; then
+            echo "Setting CONFORMANCE_FAILURE"
+            echo "CONFORMANCE_FAILURE=true" >> $GITHUB_ENV
+          fi
+          set -e
 
-    - name: Prepare test result info
-      if: always()
-      run: |
-        mkdir -p tmp/result_files
-        echo "Writing to tmp/result_files/${{ matrix.component }}.txt"
-        if [[ "${{ env.CONFORMANCE_FAILURE }}" == "true" ]]; then
-          echo "0" >> "tmp/result_files/${{ matrix.component }}.txt"
-        else
-          echo "1" >> "tmp/result_files/${{ matrix.component }}.txt"
-        fi
+          # Fail the step if we found no test to run
+          if grep -q "warning: no tests to run" ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.json ; then
+            echo "::error:: No test was found for component ${{ matrix.component }}"
+            exit -1
+          fi
 
-    - name: Upload result files
-      uses: actions/upload-artifact@v6
-      if: always()
-      with:
-        name: ${{ matrix.component }}_result_files
-        path: tmp/result_files
-        retention-days: 1
+      - name: Delete downloaded up certs
+        if: always() && matrix.required-certs != ''
+        run: |
+          for CERT_NAME in $(echo "${{ matrix.required-certs }}" | sed 's/,/ /g'); do
+            CERT_FILE=$(printenv $CERT_NAME)
 
-    - name: Prepare coverage report file to upload
-      if: github.event_name == 'schedule'
-      run: |
-        mkdir -p tmp/conf_code_cov
-        cp cover.out tmp/conf_code_cov/${{ env.SOURCE_PATH_LINEAR }}.out
+            echo "Cleaning up the certificate file $CERT_FILE..."
+            rm $CERT_FILE || true
+          done
 
-    - name: Upload coverage report file
-      uses: actions/upload-artifact@v6
-      if: github.event_name == 'schedule'
-      with:
-        name: ${{ matrix.component }}_conf_code_cov
-        path: tmp/conf_code_cov
-        retention-days: 7
+      - name: Check conformance test passed
+        continue-on-error: false
+        run: |
+          echo "CONFORMANCE_FAILURE=$CONFORMANCE_FAILURE"
+          if [[ -v CONFORMANCE_FAILURE ]]; then
+            exit 1
+          fi
 
-    # Upload logs for test analytics to consume
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ matrix.component }}_conformance_test
-        path: ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.*
+      - name: Retrieve infrastructure failure logs
+        if: failure() && matrix.logs-script != ''
+        run: .github/scripts/components-scripts/${{ matrix.logs-script }}
 
-    - name: Run destroy script
-      if: always() && matrix.destroy-script != ''
-      run: .github/scripts/components-scripts/${{ matrix.destroy-script }}
+      - name: Prepare test result info
+        if: always()
+        run: |
+          mkdir -p tmp/result_files
+          echo "Writing to tmp/result_files/${{ matrix.component }}.txt"
+          if [[ "${{ env.CONFORMANCE_FAILURE }}" == "true" ]]; then
+            echo "0" >> "tmp/result_files/${{ matrix.component }}.txt"
+          else
+            echo "1" >> "tmp/result_files/${{ matrix.component }}.txt"
+          fi
+
+      - name: Upload result files
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: ${{ matrix.component }}_result_files
+          path: tmp/result_files
+          retention-days: 1
+
+      - name: Prepare coverage report file to upload
+        if: github.event_name == 'schedule'
+        run: |
+          mkdir -p tmp/conf_code_cov
+          cp cover.out tmp/conf_code_cov/${{ env.SOURCE_PATH_LINEAR }}.out
+
+      - name: Upload coverage report file
+        uses: actions/upload-artifact@v6
+        if: github.event_name == 'schedule'
+        with:
+          name: ${{ matrix.component }}_conf_code_cov
+          path: tmp/conf_code_cov
+          retention-days: 7
+
+      # Upload logs for test analytics to consume
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.component }}_conformance_test
+          path: ${{ env.TEST_OUTPUT_FILE_PREFIX }}_conformance.*
+
+      - name: Run destroy script
+        if: always() && matrix.destroy-script != ''
+        run: .github/scripts/components-scripts/${{ matrix.destroy-script }}
 
   post_job:
     name: Post-completion
